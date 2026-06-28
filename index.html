@@ -23,30 +23,53 @@
     </div>
   </header>
 
-  <nav class="catnav" id="catnav">
-    <button class="catnav-btn active" data-target="pasteis">Pastéis</button>
-    <button class="catnav-btn" data-target="batatas">Batatas</button>
-    <button class="catnav-btn" data-target="bebidas">Bebidas</button>
-  </nav>
+  <!-- Tela de categorias (Home) -->
+  <main class="home-screen" id="homeScreen">
+    <h2 class="home-title">O que vai pedir hoje?</h2>
+    <div class="cat-cards">
+      <button class="cat-card" data-cat="pasteis">
+        <img class="cat-card-img" src="https://images.unsplash.com/photo-1612501908741-de1c5bc8e3a6?w=500&h=400&fit=crop" alt="Pastéis">
+        <div class="cat-card-label">
+          <span class="cat-card-name">Pastéis</span>
+          <span class="cat-card-count">20 sabores</span>
+        </div>
+      </button>
 
-  <main class="menu">
+      <button class="cat-card" data-cat="batatas">
+        <img class="cat-card-img" src="https://images.unsplash.com/photo-1585109649139-366815a0d713?w=500&h=400&fit=crop" alt="Batatas">
+        <div class="cat-card-label">
+          <span class="cat-card-name">Batatas</span>
+          <span class="cat-card-count">6 opções</span>
+        </div>
+      </button>
 
-    <section class="category" id="pasteis">
-      <h2 class="category-title">Pastéis</h2>
-      <p class="category-sub">Todos R$ 3,00 a mais para qualquer adicional</p>
-      <div class="items-grid" id="grid-pasteis"></div>
-    </section>
+      <button class="cat-card" data-cat="bebidas">
+        <img class="cat-card-img" src="https://images.unsplash.com/photo-1581636625402-29b2a704ef13?w=500&h=400&fit=crop" alt="Bebidas">
+        <div class="cat-card-label">
+          <span class="cat-card-name">Bebidas</span>
+          <span class="cat-card-count">11 opções</span>
+        </div>
+      </button>
 
-    <section class="category" id="batatas">
-      <h2 class="category-title">Batatas</h2>
-      <div class="items-grid" id="grid-batatas"></div>
-    </section>
+      <button class="cat-card" data-cat="sorvetes">
+        <img class="cat-card-img" src="https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=500&h=400&fit=crop" alt="Sorvetes">
+        <div class="cat-card-label">
+          <span class="cat-card-name">Sorvetes</span>
+          <span class="cat-card-count">25 opções</span>
+        </div>
+      </button>
+    </div>
+  </main>
 
-    <section class="category" id="bebidas">
-      <h2 class="category-title">Bebidas</h2>
-      <div class="items-grid" id="grid-bebidas"></div>
-    </section>
-
+  <!-- Tela de itens da categoria -->
+  <main class="items-screen" id="itemsScreen" style="display:none;">
+    <button class="back-btn" id="backBtn">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Categorias
+    </button>
+    <h2 class="category-title" id="screenTitle"></h2>
+    <p class="category-sub" id="screenSub"></p>
+    <div class="items-grid" id="itemsGrid"></div>
   </main>
 
   <!-- Botão flutuante carrinho mobile -->

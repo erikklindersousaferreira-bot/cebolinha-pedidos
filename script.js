@@ -4,7 +4,7 @@
 let cart = {}; // { itemId: quantidade }
 let orderMode = "entrega"; // "entrega" | "retirada"
 
-const allItems = [...MENU.pasteis, ...MENU.batatas, ...MENU.bebidas];
+const allItems = [...MENU.pasteis, ...MENU.batatas, ...MENU.bebidas, ...MENU.sorvetes];
 
 function getItemById(id) {
   return allItems.find((i) => i.id === id);
@@ -15,16 +15,41 @@ function formatPrice(value) {
 }
 
 // ===================================
-// RENDER DO CARDÁPIO
+// NAVEGAÇÃO ENTRE TELAS (Home / Itens da categoria)
 // ===================================
-function renderMenu() {
-  renderCategory("pasteis", "grid-pasteis");
-  renderCategory("batatas", "grid-batatas");
-  renderCategory("bebidas", "grid-bebidas");
+const CAT_LABELS = {
+  pasteis: { nome: "Pastéis", sub: "Todos R$ 3,00 a mais para qualquer adicional" },
+  batatas: { nome: "Batatas", sub: "" },
+  bebidas: { nome: "Bebidas", sub: "" },
+  sorvetes: { nome: "Sorvetes", sub: "" },
+};
+
+function openCategory(catKey) {
+  document.getElementById("homeScreen").style.display = "none";
+  document.getElementById("itemsScreen").style.display = "block";
+  document.getElementById("screenTitle").textContent = CAT_LABELS[catKey].nome;
+  document.getElementById("screenSub").textContent = CAT_LABELS[catKey].sub;
+  renderCategory(catKey);
+  window.scrollTo({ top: 0, behavior: "instant" });
 }
 
-function renderCategory(catKey, gridId) {
-  const grid = document.getElementById(gridId);
+function goHome() {
+  document.getElementById("itemsScreen").style.display = "none";
+  document.getElementById("homeScreen").style.display = "block";
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+document.querySelectorAll(".cat-card").forEach((card) => {
+  card.addEventListener("click", () => openCategory(card.dataset.cat));
+});
+
+document.getElementById("backBtn").addEventListener("click", goHome);
+
+// ===================================
+// RENDER DO CARDÁPIO (itens da categoria atual)
+// ===================================
+function renderCategory(catKey) {
+  const grid = document.getElementById("itemsGrid");
   grid.innerHTML = "";
   MENU[catKey].forEach((item) => {
     const card = document.createElement("div");
@@ -182,18 +207,6 @@ document.getElementById("closeCartBtn").addEventListener("click", closeCart);
 document.getElementById("overlay").addEventListener("click", closeCart);
 
 // ===================================
-// NAVEGAÇÃO POR CATEGORIA
-// ===================================
-document.querySelectorAll(".catnav-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".catnav-btn").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    const targetId = btn.dataset.target;
-    document.getElementById(targetId).scrollIntoView({ behavior: "smooth", block: "start" });
-  });
-});
-
-// ===================================
 // TOGGLE ENTREGA / RETIRADA
 // ===================================
 document.querySelectorAll(".toggle-btn").forEach((btn) => {
@@ -281,8 +294,15 @@ function buildWhatsappMessage() {
 
   msg += `*Pagamento:* ${payment}\n`;
 
+  if (payment === "Pix") {
+    msg += `\n*Dados para Pix:*\n`;
+    msg += `Nome: ${PIX_INFO.nome}\n`;
+    msg += `Banco: ${PIX_INFO.banco}\n`;
+    msg += `Chave Pix: ${PIX_INFO.chave}\n`;
+  }
+
   if (note) {
-    msg += `*Observação:* ${note}\n`;
+    msg += `\n*Observação:* ${note}\n`;
   }
 
   return msg;
@@ -298,6 +318,5 @@ document.getElementById("confirmBtn").addEventListener("click", () => {
 // ===================================
 // INIT
 // ===================================
-renderMenu();
 populateBairros();
 updateCartUI();
