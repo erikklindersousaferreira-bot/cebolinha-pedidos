@@ -27,6 +27,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+body.modal-open {
+  overflow: hidden;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
@@ -419,6 +423,11 @@ body {
 .overlay.visible { opacity: 1; pointer-events: auto; }
 
 /* ===== MODAL DE ADICIONAIS ===== */
+#addonsOverlay {
+  z-index: 120;
+  background: rgba(43, 36, 32, 0.72);
+}
+
 .addons-modal {
   position: fixed;
   left: 50%;
@@ -429,7 +438,7 @@ body {
   max-height: 82vh;
   background: var(--amarelo-claro);
   border-radius: 20px 20px 0 0;
-  z-index: 90;
+  z-index: 130;
   display: flex;
   flex-direction: column;
   box-shadow: 0 -8px 32px rgba(0,0,0,0.2);
@@ -438,16 +447,23 @@ body {
 
 @media (min-width: 600px) {
   .addons-modal {
-    bottom: 50%;
+    top: 50%;
+    bottom: auto;
     border-radius: 20px;
-    transform: translate(-50%, calc(50% + 40px));
+    transform: translate(-50%, calc(-50% + 40px));
   }
   .addons-modal.open {
-    transform: translate(-50%, 50%);
+    transform: translate(-50%, -50%);
   }
 }
 
 .addons-modal.open { transform: translate(-50%, 0); }
+
+@media (min-width: 600px) {
+  .addons-modal.open {
+    transform: translate(-50%, -50%);
+  }
+}
 
 .addons-header {
   display: flex;

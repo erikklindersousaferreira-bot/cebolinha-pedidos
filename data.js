@@ -78,6 +78,19 @@ const MENU = {
   ],
 };
 
+const ADICIONAIS_PASTEL = [
+  { id: "carne", nome: "Carne" },
+  { id: "frango", nome: "Frango" },
+  { id: "queijo", nome: "Queijo" },
+  { id: "camarao", nome: "Camarão" },
+  { id: "calabresa", nome: "Calabresa" },
+  { id: "catupiry", nome: "Catupiry" },
+  { id: "cheddar", nome: "Cheddar" },
+  { id: "presunto", nome: "Presunto" },
+  { id: "banana", nome: "Banana" },
+  { id: "pizza", nome: "Pizza" },
+];
+
 const PIX_INFO = {
   nome: "Tamara Thais Lima de Araujo",
   banco: "Nubank",

@@ -18,6 +18,10 @@ function getItemById(id) {
   return allItems.find((i) => i.id === id);
 }
 
+function getAddonById(id) {
+  return ADICIONAIS_PASTEL.find((addon) => addon.id === id);
+}
+
 function formatPrice(value) {
   return value.toFixed(2).replace(".", ",");
 }
@@ -126,12 +130,11 @@ function openAddonsModal(itemId) {
   document.getElementById("addonsItemName").textContent = item.nome;
 
   const listEl = document.getElementById("addonsList");
-  listEl.innerHTML = MENU.pasteis
-    .filter((p) => p.id !== itemId) // não faz sentido adicionar o próprio sabor já escolhido
+  listEl.innerHTML = ADICIONAIS_PASTEL
     .map(
-      (p) => `
-      <div class="addon-option" data-addon-id="${p.id}" onclick="toggleAddon(${p.id})">
-        <span class="addon-option-name">${p.nome}</span>
+      (addon) => `
+      <div class="addon-option" data-addon-id="${addon.id}" onclick="toggleAddon('${addon.id}')">
+        <span class="addon-option-name">${addon.nome}</span>
         <div class="addon-option-right">
           <span class="addon-option-price">+ R$ ${formatPrice(ADDON_PRICE)}</span>
           <div class="addon-checkbox">
@@ -147,11 +150,13 @@ function openAddonsModal(itemId) {
 
   document.getElementById("addonsModal").classList.add("open");
   document.getElementById("addonsOverlay").classList.add("visible");
+  document.body.classList.add("modal-open");
 }
 
 function closeAddonsModal() {
   document.getElementById("addonsModal").classList.remove("open");
   document.getElementById("addonsOverlay").classList.remove("visible");
+  document.body.classList.remove("modal-open");
   currentAddonItemId = null;
 }
 
@@ -195,7 +200,7 @@ function getLinePrice(line) {
 function getLineLabel(line) {
   const baseItem = getItemById(line.itemId);
   if (line.addonIds.length === 0) return baseItem.nome;
-  const addonNames = line.addonIds.map((id) => getItemById(id).nome);
+  const addonNames = line.addonIds.map((id) => getAddonById(id).nome);
   return `${baseItem.nome} + ${addonNames.join(" + ")}`;
 }
 
