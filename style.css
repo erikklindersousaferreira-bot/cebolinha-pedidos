@@ -17,7 +17,7 @@ html { scroll-behavior: smooth; }
 
 body {
   font-family: 'Helvetica Neue', Arial, sans-serif;
-  background: var(--amarelo-claro);
+  background: var(--amarelo);
   color: var(--carvao);
   padding-bottom: 90px;
 }
@@ -96,48 +96,100 @@ body {
   justify-content: center;
 }
 
-/* ===== CATEGORY NAV ===== */
-.catnav {
+/* ===== HOME SCREEN (categorias) ===== */
+.home-screen {
   max-width: 720px;
   margin: 0 auto;
-  display: flex;
-  gap: 8px;
-  padding: 12px 16px;
-  overflow-x: auto;
-  position: sticky;
-  top: 72px;
-  background: var(--amarelo-claro);
-  z-index: 40;
+  padding: 20px 16px 24px;
 }
 
-.catnav-btn {
-  flex-shrink: 0;
-  background: var(--branco);
-  border: 1px solid var(--borda);
+.home-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--carvao);
+  margin-bottom: 16px;
+}
+
+.cat-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.cat-card {
+  position: relative;
+  border: none;
+  border-radius: 18px;
+  overflow: hidden;
+  width: 100%;
+  height: 160px;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: var(--sombra);
+  transition: transform 0.12s ease;
+}
+
+.cat-card:active {
+  transform: scale(0.97);
+}
+
+.cat-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.cat-card-label {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(43,36,32,0) 35%, rgba(43,36,32,0.78) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 16px 18px;
+  text-align: left;
+}
+
+.cat-card-name {
+  color: var(--branco);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.cat-card-count {
+  color: rgba(255,255,255,0.85);
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* ===== ITEMS SCREEN (lista de uma categoria) ===== */
+.items-screen {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 16px 16px 24px;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
   color: var(--carvao);
   font-weight: 700;
   font-size: 14px;
-  padding: 9px 18px;
-  border-radius: 100px;
+  padding: 8px 0;
+  margin-bottom: 8px;
   cursor: pointer;
-  transition: all 0.15s ease;
 }
 
-.catnav-btn.active {
-  background: var(--vermelho);
-  border-color: var(--vermelho);
-  color: var(--branco);
-}
-
-/* ===== MENU ===== */
-.menu {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 8px 16px 24px;
-}
-
-.category { padding-top: 20px; }
-
+/* ===== MENU (itens dentro da categoria) ===== */
 .category-title {
   font-size: 22px;
   font-weight: 800;
@@ -152,19 +204,25 @@ body {
 }
 
 .items-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+@media (min-width: 640px) {
+  .items-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .item-card {
   background: var(--branco);
-  border-radius: var(--raio);
-  padding: 14px 16px;
+  border-radius: 10px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   box-shadow: var(--sombra);
 }
 
@@ -172,26 +230,26 @@ body {
 
 .item-nome {
   font-weight: 700;
-  font-size: 15px;
+  font-size: 13.5px;
   color: var(--carvao);
-  line-height: 1.3;
+  line-height: 1.25;
 }
 
 .item-preco {
   font-weight: 800;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--vermelho-escuro);
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .item-add-btn {
   flex-shrink: 0;
-  background: var(--amarelo);
+  background: var(--vermelho);
   border: none;
-  color: var(--carvao);
-  font-weight: 800;
-  font-size: 14px;
-  padding: 9px 16px;
+  color: var(--branco);
+  font-weight: 700;
+  font-size: 12.5px;
+  padding: 7px 14px;
   border-radius: 100px;
   cursor: pointer;
   transition: transform 0.1s ease;
@@ -203,20 +261,20 @@ body {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: var(--amarelo);
   border-radius: 100px;
-  padding: 6px 10px;
+  padding: 4px 8px;
 }
 
 .qty-btn {
   background: var(--carvao);
   color: var(--branco);
   border: none;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   display: flex;
@@ -227,8 +285,8 @@ body {
 
 .qty-val {
   font-weight: 800;
-  font-size: 14px;
-  min-width: 16px;
+  font-size: 13px;
+  min-width: 14px;
   text-align: center;
 }
 
