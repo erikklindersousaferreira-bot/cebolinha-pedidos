@@ -93,11 +93,19 @@ function renderItemAction(itemId) {
   const isAddonCategory = ADDON_CATEGORIES.includes(categoryOf(itemId));
 
   if (isAddonCategory) {
-    // Pastéis sempre abrem o modal; quantidade fica controlada lá dentro (cada config é uma linha)
-    const linesCount = cartLines.filter((l) => l.itemId === itemId).reduce((s, l) => s + l.qty, 0);
-    actionSlot.innerHTML = linesCount > 0
-      ? `<button class="item-add-btn" onclick="addPastel(${itemId})">+ Adicionar (${linesCount})</button>`
-      : `<button class="item-add-btn" onclick="addPastel(${itemId})">Adicionar</button>`;
+    const totalQty = cartLines.filter((l) => l.itemId === itemId).reduce((s, l) => s + l.qty, 0);
+
+    if (totalQty === 0) {
+      actionSlot.innerHTML = `<button class="item-add-btn" onclick="addPastel(${itemId})">Adicionar</button>`;
+    } else {
+      actionSlot.innerHTML = `
+        <div class="item-qty-control">
+          <button class="qty-btn" onclick="removePastel(${itemId})">−</button>
+          <span class="qty-val">${totalQty}</span>
+          <button class="qty-btn" onclick="addPastel(${itemId})">+</button>
+        </div>
+      `;
+    }
     return;
   }
 
@@ -116,24 +124,50 @@ function renderItemAction(itemId) {
   }
 }
 
-function addPastel(itemId) {
-  const line = {
-    lineId: nextLineId++,
-    itemId,
-    addonIds: [],
-    qty: 1,
-  };
+// Encontra (ou cria) a linha "base" sem adicionais para um pastel
+function getOrCreateBaseLine(itemId) {
+  let line = cartLines.find((l) => l.itemId === itemId && l.addonIds.length === 0);
+  if (!line) {
+    line = { lineId: nextLineId++, itemId, addonIds: [], qty: 0 };
+    cartLines.push(line);
+  }
+  return line;
+}
 
-  cartLines.push(line);
+function addPastel(itemId) {
+  const line = getOrCreateBaseLine(itemId);
+  const isFirstUnit = line.qty === 0;
+  line.qty += 1;
+
   renderItemAction(itemId);
   updateCartUI();
-  showAddonSuggestion(itemId, line.lineId);
+
+  if (isFirstUnit) {
+    showAddonSuggestion(itemId, line.lineId);
+  }
+}
+
+function removePastel(itemId) {
+  // Remove primeiro da linha base; se não houver, remove da última linha com adicional
+  const lines = cartLines.filter((l) => l.itemId === itemId);
+  if (lines.length === 0) return;
+
+  const baseLine = lines.find((l) => l.addonIds.length === 0 && l.qty > 0);
+  const targetLine = baseLine || lines[lines.length - 1];
+
+  targetLine.qty -= 1;
+  if (targetLine.qty <= 0) {
+    cartLines = cartLines.filter((l) => l.lineId !== targetLine.lineId);
+  }
+
+  renderItemAction(itemId);
+  updateCartUI();
 }
 
 function showAddonSuggestion(itemId, lineId) {
   const item = getItemById(itemId);
   const suggestion = document.getElementById("addonSuggestion");
-  document.getElementById("addonSuggestionTitle").textContent = `${item.nome} adicionado`;
+  document.getElementById("addonSuggestionTitle").textContent = `${item.nome} adicional`;
   suggestionLineId = lineId;
 
   suggestion.classList.add("visible");
@@ -230,15 +264,36 @@ document.getElementById("openSuggestedAddons").addEventListener("click", () => {
 });
 
 document.getElementById("addonsConfirmBtn").addEventListener("click", () => {
-  const existingLine = cartLines.find((line) => line.lineId === currentAddonLineId);
+  const addonIds = Array.from(selectedAddons);
+  const targetLine = cartLines.find((line) => line.lineId === currentAddonLineId);
 
-  if (existingLine) {
-    existingLine.addonIds = Array.from(selectedAddons);
+  if (targetLine && targetLine.addonIds.length === 0 && targetLine.qty > 0) {
+    // Linha base (sem adicional): separa 1 unidade para a nova configuração
+    targetLine.qty -= 1;
+
+    if (addonIds.length > 0) {
+      cartLines.push({
+        lineId: nextLineId++,
+        itemId: currentAddonItemId,
+        addonIds,
+        qty: 1,
+      });
+    } else {
+      // Sem adicional selecionado: devolve a unidade para a linha base
+      targetLine.qty += 1;
+    }
+
+    if (targetLine.qty <= 0) {
+      cartLines = cartLines.filter((l) => l.lineId !== targetLine.lineId);
+    }
+  } else if (targetLine) {
+    // Editando uma linha que já tinha adicionais
+    targetLine.addonIds = addonIds;
   } else {
     cartLines.push({
       lineId: nextLineId++,
       itemId: currentAddonItemId,
-      addonIds: Array.from(selectedAddons),
+      addonIds,
       qty: 1,
     });
   }
@@ -272,17 +327,20 @@ function incrementLine(lineId) {
   const line = cartLines.find((l) => l.lineId === lineId);
   if (line) line.qty += 1;
   updateCartUI();
+  if (line) renderItemAction(line.itemId);
 }
 
 function decrementLine(lineId) {
   const line = cartLines.find((l) => l.lineId === lineId);
   if (!line) return;
+  const itemId = line.itemId;
   line.qty -= 1;
   if (line.qty <= 0) {
     removeLine(lineId);
     return;
   }
   updateCartUI();
+  renderItemAction(itemId);
 }
 
 // ===================================
