@@ -128,6 +128,8 @@ function getTotalCount() {
 // ===================================
 // ATUALIZA TODA A UI DO CARRINHO
 // ===================================
+let lastTotalCount = 0;
+
 function updateCartUI() {
   const totalCount = getTotalCount();
   const subtotal = getSubtotal();
@@ -135,9 +137,18 @@ function updateCartUI() {
   const total = subtotal + deliveryFee;
 
   // Contadores topo + fab
-  document.getElementById("cartCount").textContent = totalCount;
+  const cartCountEl = document.getElementById("cartCount");
+  cartCountEl.textContent = totalCount;
   document.getElementById("fabCount").textContent = totalCount;
   document.getElementById("fabTotal").textContent = formatPrice(total);
+
+  if (totalCount !== lastTotalCount && totalCount > 0) {
+    cartCountEl.classList.remove("bump");
+    // força reflow para reiniciar a animação
+    void cartCountEl.offsetWidth;
+    cartCountEl.classList.add("bump");
+  }
+  lastTotalCount = totalCount;
 
   // FAB visível só se tiver item e drawer fechado
   const fab = document.getElementById("fabCart");
@@ -271,7 +282,7 @@ function buildWhatsappMessage() {
   const deliveryFee = getDeliveryFee();
   const total = subtotal + deliveryFee;
 
-  let msg = `*NOVO PEDIDO - Cebolinha Pastéis & Batata*\n\n`;
+  let msg = `*NOVO PEDIDO - Cebolinha Pastéis & Batatas*\n\n`;
   msg += `*Cliente:* ${name}\n`;
   msg += `*Telefone:* ${phone}\n\n`;
   msg += `*Itens:*\n`;
