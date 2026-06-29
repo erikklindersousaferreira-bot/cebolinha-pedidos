@@ -167,7 +167,7 @@ function removePastel(itemId) {
 function showAddonSuggestion(itemId, lineId) {
   const item = getItemById(itemId);
   const suggestion = document.getElementById("addonSuggestion");
-  document.getElementById("addonSuggestionTitle").textContent = `Pastel de ${item.nome} adicional`;
+  document.getElementById("addonSuggestionTitle").textContent = `Pastel de ${item.nome} adicionado`;
   suggestionLineId = lineId;
 
   suggestion.classList.add("visible");
