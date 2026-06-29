@@ -66,10 +66,8 @@ body {
 .logo {
   width: 46px;
   height: 46px;
-  border-radius: 50%;
-  object-fit: cover;
+  object-fit: contain;
   flex-shrink: 0;
-  box-shadow: 0 0 0 2px var(--amarelo), 0 2px 6px rgba(43,36,32,0.15);
 }
 
 .brand-text { flex: 1; }
