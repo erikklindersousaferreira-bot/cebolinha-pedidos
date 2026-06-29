@@ -96,8 +96,8 @@ function renderItemAction(itemId) {
     // Pastéis sempre abrem o modal; quantidade fica controlada lá dentro (cada config é uma linha)
     const linesCount = cartLines.filter((l) => l.itemId === itemId).reduce((s, l) => s + l.qty, 0);
     actionSlot.innerHTML = linesCount > 0
-      ? `<button class="item-add-btn" onclick="openAddonsModal(${itemId})">+ Adicionar (${linesCount})</button>`
-      : `<button class="item-add-btn" onclick="openAddonsModal(${itemId})">Adicionar</button>`;
+      ? `<button class="item-add-btn" onclick="addPastel(${itemId})">+ Adicionar (${linesCount})</button>`
+      : `<button class="item-add-btn" onclick="addPastel(${itemId})">Adicionar</button>`;
     return;
   }
 
@@ -116,14 +116,49 @@ function renderItemAction(itemId) {
   }
 }
 
+function addPastel(itemId) {
+  const line = {
+    lineId: nextLineId++,
+    itemId,
+    addonIds: [],
+    qty: 1,
+  };
+
+  cartLines.push(line);
+  renderItemAction(itemId);
+  updateCartUI();
+  showAddonSuggestion(itemId, line.lineId);
+}
+
+function showAddonSuggestion(itemId, lineId) {
+  const item = getItemById(itemId);
+  const suggestion = document.getElementById("addonSuggestion");
+  document.getElementById("addonSuggestionTitle").textContent = `${item.nome} adicionado`;
+  suggestionLineId = lineId;
+
+  suggestion.classList.add("visible");
+  clearTimeout(suggestionTimer);
+  suggestionTimer = setTimeout(hideAddonSuggestion, 7000);
+}
+
+function hideAddonSuggestion() {
+  document.getElementById("addonSuggestion").classList.remove("visible");
+  suggestionLineId = null;
+  clearTimeout(suggestionTimer);
+}
+
 // ===================================
 // MODAL DE ADICIONAIS (pastéis)
 // ===================================
 let currentAddonItemId = null;
+let currentAddonLineId = null;
+let suggestionLineId = null;
+let suggestionTimer = null;
 let selectedAddons = new Set();
 
-function openAddonsModal(itemId) {
+function openAddonsModal(itemId, lineId = null) {
   currentAddonItemId = itemId;
+  currentAddonLineId = lineId;
   selectedAddons = new Set();
 
   const item = getItemById(itemId);
@@ -158,6 +193,7 @@ function closeAddonsModal() {
   document.getElementById("addonsOverlay").classList.remove("visible");
   document.body.classList.remove("modal-open");
   currentAddonItemId = null;
+  currentAddonLineId = null;
 }
 
 function toggleAddon(addonId) {
@@ -181,14 +217,32 @@ function updateAddonsTotal() {
 
 document.getElementById("closeAddonsBtn").addEventListener("click", closeAddonsModal);
 document.getElementById("addonsOverlay").addEventListener("click", closeAddonsModal);
+document.getElementById("dismissAddonSuggestion").addEventListener("click", hideAddonSuggestion);
+document.getElementById("openSuggestedAddons").addEventListener("click", () => {
+  const line = cartLines.find((cartLine) => cartLine.lineId === suggestionLineId);
+  if (!line) {
+    hideAddonSuggestion();
+    return;
+  }
+
+  hideAddonSuggestion();
+  openAddonsModal(line.itemId, line.lineId);
+});
 
 document.getElementById("addonsConfirmBtn").addEventListener("click", () => {
-  cartLines.push({
-    lineId: nextLineId++,
-    itemId: currentAddonItemId,
-    addonIds: Array.from(selectedAddons),
-    qty: 1,
-  });
+  const existingLine = cartLines.find((line) => line.lineId === currentAddonLineId);
+
+  if (existingLine) {
+    existingLine.addonIds = Array.from(selectedAddons);
+  } else {
+    cartLines.push({
+      lineId: nextLineId++,
+      itemId: currentAddonItemId,
+      addonIds: Array.from(selectedAddons),
+      qty: 1,
+    });
+  }
+
   renderItemAction(currentAddonItemId);
   updateCartUI();
   closeAddonsModal();
