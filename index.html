@@ -80,6 +80,24 @@
     </span>
   </button>
 
+  <!-- Modal de adicionais (só para pastéis) -->
+  <div class="overlay" id="addonsOverlay"></div>
+  <div class="addons-modal" id="addonsModal">
+    <div class="addons-header">
+      <h3 id="addonsItemName">Pastel</h3>
+      <button class="close-btn" id="closeAddonsBtn">&times;</button>
+    </div>
+    <p class="addons-sub">Adicione outros sabores por R$ 3,00 cada (opcional)</p>
+    <div class="addons-list" id="addonsList"></div>
+    <div class="addons-footer">
+      <div class="addons-total">
+        <span>Total do item</span>
+        <span id="addonsItemTotal">R$ 0,00</span>
+      </div>
+      <button class="addons-confirm-btn" id="addonsConfirmBtn">Adicionar ao pedido</button>
+    </div>
+  </div>
+
   <!-- Drawer do carrinho -->
   <div class="overlay" id="overlay"></div>
   <aside class="cart-drawer" id="cartDrawer">

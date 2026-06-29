@@ -1,8 +1,16 @@
 // ===================================
 // ESTADO DO CARRINHO
 // ===================================
-let cart = {}; // { itemId: quantidade }
+// cart: para itens SEM adicionais (batatas, bebidas, sorvetes) -> { itemId: quantidade }
+// cartLines: para itens COM adicionais (pastéis) -> [{ lineId, itemId, addonIds: [], qty }]
+let cart = {};
+let cartLines = [];
 let orderMode = "entrega"; // "entrega" | "retirada"
+let nextLineId = 1;
+
+// Categorias que usam o modal de adicionais
+const ADDON_CATEGORIES = ["pasteis"];
+const ADDON_PRICE = 3.00;
 
 const allItems = [...MENU.pasteis, ...MENU.batatas, ...MENU.bebidas, ...MENU.sorvetes];
 
@@ -12,6 +20,13 @@ function getItemById(id) {
 
 function formatPrice(value) {
   return value.toFixed(2).replace(".", ",");
+}
+
+function categoryOf(itemId) {
+  for (const key of Object.keys(MENU)) {
+    if (MENU[key].some((i) => i.id === itemId)) return key;
+  }
+  return null;
 }
 
 // ===================================
@@ -71,6 +86,17 @@ function renderItemAction(itemId) {
   const card = document.getElementById(`card-${itemId}`);
   if (!card) return;
   const actionSlot = card.querySelector(".item-action");
+  const isAddonCategory = ADDON_CATEGORIES.includes(categoryOf(itemId));
+
+  if (isAddonCategory) {
+    // Pastéis sempre abrem o modal; quantidade fica controlada lá dentro (cada config é uma linha)
+    const linesCount = cartLines.filter((l) => l.itemId === itemId).reduce((s, l) => s + l.qty, 0);
+    actionSlot.innerHTML = linesCount > 0
+      ? `<button class="item-add-btn" onclick="openAddonsModal(${itemId})">+ Adicionar (${linesCount})</button>`
+      : `<button class="item-add-btn" onclick="openAddonsModal(${itemId})">Adicionar</button>`;
+    return;
+  }
+
   const qty = cart[itemId] || 0;
 
   if (qty === 0) {
@@ -84,6 +110,118 @@ function renderItemAction(itemId) {
       </div>
     `;
   }
+}
+
+// ===================================
+// MODAL DE ADICIONAIS (pastéis)
+// ===================================
+let currentAddonItemId = null;
+let selectedAddons = new Set();
+
+function openAddonsModal(itemId) {
+  currentAddonItemId = itemId;
+  selectedAddons = new Set();
+
+  const item = getItemById(itemId);
+  document.getElementById("addonsItemName").textContent = item.nome;
+
+  const listEl = document.getElementById("addonsList");
+  listEl.innerHTML = MENU.pasteis
+    .filter((p) => p.id !== itemId) // não faz sentido adicionar o próprio sabor já escolhido
+    .map(
+      (p) => `
+      <div class="addon-option" data-addon-id="${p.id}" onclick="toggleAddon(${p.id})">
+        <span class="addon-option-name">${p.nome}</span>
+        <div class="addon-option-right">
+          <span class="addon-option-price">+ R$ ${formatPrice(ADDON_PRICE)}</span>
+          <div class="addon-checkbox">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+        </div>
+      </div>
+    `
+    )
+    .join("");
+
+  updateAddonsTotal();
+
+  document.getElementById("addonsModal").classList.add("open");
+  document.getElementById("addonsOverlay").classList.add("visible");
+}
+
+function closeAddonsModal() {
+  document.getElementById("addonsModal").classList.remove("open");
+  document.getElementById("addonsOverlay").classList.remove("visible");
+  currentAddonItemId = null;
+}
+
+function toggleAddon(addonId) {
+  if (selectedAddons.has(addonId)) {
+    selectedAddons.delete(addonId);
+  } else {
+    selectedAddons.add(addonId);
+  }
+  const optionEl = document.querySelector(`.addon-option[data-addon-id="${addonId}"]`);
+  optionEl.classList.toggle("selected");
+  updateAddonsTotal();
+}
+
+function updateAddonsTotal() {
+  const baseItem = getItemById(currentAddonItemId);
+  const total = baseItem.preco + selectedAddons.size * ADDON_PRICE;
+  document.getElementById("addonsItemTotal").textContent = `R$ ${formatPrice(total)}`;
+}
+
+document.getElementById("closeAddonsBtn").addEventListener("click", closeAddonsModal);
+document.getElementById("addonsOverlay").addEventListener("click", closeAddonsModal);
+
+document.getElementById("addonsConfirmBtn").addEventListener("click", () => {
+  cartLines.push({
+    lineId: nextLineId++,
+    itemId: currentAddonItemId,
+    addonIds: Array.from(selectedAddons),
+    qty: 1,
+  });
+  renderItemAction(currentAddonItemId);
+  updateCartUI();
+  closeAddonsModal();
+});
+
+function getLinePrice(line) {
+  const baseItem = getItemById(line.itemId);
+  return (baseItem.preco + line.addonIds.length * ADDON_PRICE) * line.qty;
+}
+
+function getLineLabel(line) {
+  const baseItem = getItemById(line.itemId);
+  if (line.addonIds.length === 0) return baseItem.nome;
+  const addonNames = line.addonIds.map((id) => getItemById(id).nome);
+  return `${baseItem.nome} + ${addonNames.join(" + ")}`;
+}
+
+function removeLine(lineId) {
+  cartLines = cartLines.filter((l) => l.lineId !== lineId);
+  updateCartUI();
+  // Atualiza o botão na tela de produtos se ainda estiver visível
+  const allPastelIds = MENU.pasteis.map((p) => p.id);
+  allPastelIds.forEach((id) => renderItemAction(id));
+}
+
+function incrementLine(lineId) {
+  const line = cartLines.find((l) => l.lineId === lineId);
+  if (line) line.qty += 1;
+  updateCartUI();
+}
+
+function decrementLine(lineId) {
+  const line = cartLines.find((l) => l.lineId === lineId);
+  if (!line) return;
+  line.qty -= 1;
+  if (line.qty <= 0) {
+    removeLine(lineId);
+    return;
+  }
+  updateCartUI();
 }
 
 // ===================================
@@ -111,7 +249,9 @@ function getCartEntries() {
 }
 
 function getSubtotal() {
-  return getCartEntries().reduce((sum, e) => sum + e.item.preco * e.qty, 0);
+  const simpleTotal = getCartEntries().reduce((sum, e) => sum + e.item.preco * e.qty, 0);
+  const linesTotal = cartLines.reduce((sum, line) => sum + getLinePrice(line), 0);
+  return simpleTotal + linesTotal;
 }
 
 function getDeliveryFee() {
@@ -122,7 +262,9 @@ function getDeliveryFee() {
 }
 
 function getTotalCount() {
-  return Object.values(cart).reduce((a, b) => a + b, 0);
+  const simpleCount = Object.values(cart).reduce((a, b) => a + b, 0);
+  const linesCount = cartLines.reduce((sum, line) => sum + line.qty, 0);
+  return simpleCount + linesCount;
 }
 
 // ===================================
@@ -163,15 +305,17 @@ function updateCartUI() {
   const emptyMsg = document.getElementById("emptyCartMsg");
   const cartFooter = document.getElementById("cartFooter");
   const entries = getCartEntries();
+  const hasAnyItem = entries.length > 0 || cartLines.length > 0;
 
-  if (entries.length === 0) {
+  if (!hasAnyItem) {
     emptyMsg.style.display = "block";
     cartItemsEl.innerHTML = "";
     cartFooter.style.display = "none";
   } else {
     emptyMsg.style.display = "none";
     cartFooter.style.display = "block";
-    cartItemsEl.innerHTML = entries
+
+    const simpleHtml = entries
       .map(
         (e) => `
         <div class="cart-item">
@@ -188,6 +332,26 @@ function updateCartUI() {
       `
       )
       .join("");
+
+    const linesHtml = cartLines
+      .map(
+        (line) => `
+        <div class="cart-item">
+          <div>
+            <div class="cart-item-name">${line.qty}x ${getLineLabel(line)}</div>
+            <div class="cart-item-price">R$ ${formatPrice(getLinePrice(line))}</div>
+          </div>
+          <div class="item-qty-control">
+            <button class="qty-btn" onclick="decrementLine(${line.lineId})">−</button>
+            <span class="qty-val">${line.qty}</span>
+            <button class="qty-btn" onclick="incrementLine(${line.lineId})">+</button>
+          </div>
+        </div>
+      `
+      )
+      .join("");
+
+    cartItemsEl.innerHTML = linesHtml + simpleHtml;
   }
 
   // Resumo de valores
@@ -286,6 +450,9 @@ function buildWhatsappMessage() {
   msg += `*Cliente:* ${name}\n`;
   msg += `*Telefone:* ${phone}\n\n`;
   msg += `*Itens:*\n`;
+  cartLines.forEach((line) => {
+    msg += `▫️ ${line.qty}x ${getLineLabel(line)} — R$ ${formatPrice(getLinePrice(line))}\n`;
+  });
   entries.forEach((e) => {
     msg += `▫️ ${e.qty}x ${e.item.nome} — R$ ${formatPrice(e.item.preco * e.qty)}\n`;
   });
