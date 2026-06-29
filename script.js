@@ -175,6 +175,8 @@ function updateAddonsTotal() {
   const baseItem = getItemById(currentAddonItemId);
   const total = baseItem.preco + selectedAddons.size * ADDON_PRICE;
   document.getElementById("addonsItemTotal").textContent = `R$ ${formatPrice(total)}`;
+  document.getElementById("addonsConfirmBtn").textContent =
+    selectedAddons.size === 0 ? "Adicionar sem adicional" : "Adicionar ao pedido";
 }
 
 document.getElementById("closeAddonsBtn").addEventListener("click", closeAddonsModal);
