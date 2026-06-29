@@ -198,8 +198,15 @@ function openAddonsModal(itemId, lineId = null) {
   const item = getItemById(itemId);
   document.getElementById("addonsItemName").textContent = item.nome;
 
+  // Remove da lista qualquer sabor que já esteja presente no nome do pastel base
+  // (ex: pastel "Carne, Queijo e Catupiry" não pode ganhar adicional "Carne" nem "Queijo" nem "Catupiry")
+  const nomeNormalizado = item.nome.toLowerCase();
+  const adicionaisDisponiveis = ADICIONAIS_PASTEL.filter(
+    (addon) => !nomeNormalizado.includes(addon.nome.toLowerCase())
+  );
+
   const listEl = document.getElementById("addonsList");
-  listEl.innerHTML = ADICIONAIS_PASTEL
+  listEl.innerHTML = adicionaisDisponiveis
     .map(
       (addon) => `
       <div class="addon-option" data-addon-id="${addon.id}" onclick="toggleAddon('${addon.id}')">
@@ -568,14 +575,36 @@ function buildWhatsappMessage() {
   let msg = `*NOVO PEDIDO - Cebolinha Pastéis & Batatas*\n\n`;
   msg += `*Cliente:* ${name}\n`;
   msg += `*Telefone:* ${phone}\n\n`;
-  msg += `*Itens:*\n`;
+
+  // Agrupa cartLines (pasteis com possiveis adicionais) e entries (batatas/bebidas/sorvetes) por categoria
+  const CATEGORY_TITLES = {
+    pasteis: "Pastéis",
+    batatas: "Batatas",
+    bebidas: "Bebidas",
+    sorvetes: "Sorvetes",
+  };
+
+  const groupedLines = {};
   cartLines.forEach((line) => {
-    msg += `▫️ ${line.qty}x ${getLineLabel(line)} — R$ ${formatPrice(getLinePrice(line))}\n`;
+    const cat = categoryOf(line.itemId);
+    if (!groupedLines[cat]) groupedLines[cat] = [];
+    groupedLines[cat].push(`▫️ ${line.qty}x ${getLineLabel(line)} — R$ ${formatPrice(getLinePrice(line))}`);
   });
+
   entries.forEach((e) => {
-    msg += `▫️ ${e.qty}x ${e.item.nome} — R$ ${formatPrice(e.item.preco * e.qty)}\n`;
+    const cat = categoryOf(e.item.id);
+    if (!groupedLines[cat]) groupedLines[cat] = [];
+    groupedLines[cat].push(`▫️ ${e.qty}x ${e.item.nome} — R$ ${formatPrice(e.item.preco * e.qty)}`);
   });
-  msg += `\n*Subtotal:* R$ ${formatPrice(subtotal)}\n`;
+
+  Object.keys(CATEGORY_TITLES).forEach((catKey) => {
+    if (groupedLines[catKey] && groupedLines[catKey].length > 0) {
+      msg += `*${CATEGORY_TITLES[catKey]}:*\n`;
+      msg += groupedLines[catKey].join("\n") + "\n\n";
+    }
+  });
+
+  msg += `*Subtotal:* R$ ${formatPrice(subtotal)}\n`;
 
   if (orderMode === "entrega") {
     msg += `*Taxa de entrega (${bairro}):* R$ ${formatPrice(deliveryFee)}\n`;

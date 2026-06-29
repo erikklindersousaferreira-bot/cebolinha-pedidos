@@ -82,7 +82,6 @@ const ADICIONAIS_PASTEL = [
   { id: "carne", nome: "Carne" },
   { id: "frango", nome: "Frango" },
   { id: "queijo", nome: "Queijo" },
-  { id: "camarao", nome: "Camarão" },
   { id: "calabresa", nome: "Calabresa" },
   { id: "catupiry", nome: "Catupiry" },
   { id: "cheddar", nome: "Cheddar" },
