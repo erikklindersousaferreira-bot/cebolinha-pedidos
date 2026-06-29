@@ -167,7 +167,7 @@ function removePastel(itemId) {
 function showAddonSuggestion(itemId, lineId) {
   const item = getItemById(itemId);
   const suggestion = document.getElementById("addonSuggestion");
-  document.getElementById("addonSuggestionTitle").textContent = `${item.nome} adicional`;
+  document.getElementById("addonSuggestionTitle").textContent = `Pastel de ${item.nome} adicional`;
   suggestionLineId = lineId;
 
   suggestion.classList.add("visible");
@@ -196,7 +196,7 @@ function openAddonsModal(itemId, lineId = null) {
   selectedAddons = new Set();
 
   const item = getItemById(itemId);
-  document.getElementById("addonsItemName").textContent = item.nome;
+  document.getElementById("addonsItemName").textContent = `Pastel de ${item.nome}`;
 
   // Remove da lista qualquer sabor que já esteja presente no nome do pastel base
   // (ex: pastel "Carne, Queijo e Catupiry" não pode ganhar adicional "Carne" nem "Queijo" nem "Catupiry")
@@ -320,6 +320,11 @@ function getLineLabel(line) {
   if (line.addonIds.length === 0) return baseItem.nome;
   const addonNames = line.addonIds.map((id) => getAddonById(id).nome);
   return `${baseItem.nome} + ${addonNames.join(" + ")}`;
+}
+
+// Versão usada no carrinho lateral, com prefixo "Pastel de" para deixar claro a categoria
+function getLineLabelForCart(line) {
+  return `Pastel de ${getLineLabel(line)}`;
 }
 
 function removeLine(lineId) {
@@ -464,7 +469,7 @@ function updateCartUI() {
         (line) => `
         <div class="cart-item">
           <div>
-            <div class="cart-item-name">${line.qty}x ${getLineLabel(line)}</div>
+            <div class="cart-item-name">${line.qty}x ${getLineLabelForCart(line)}</div>
             <div class="cart-item-price">R$ ${formatPrice(getLinePrice(line))}</div>
           </div>
           <div class="item-qty-control">
