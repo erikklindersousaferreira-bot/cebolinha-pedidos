@@ -5,6 +5,13 @@
 
 const WHATSAPP_NUMBER = "5594991361499"; // número da loja, formato internacional sem espaços/símbolos
 
+const SABORES_REFRIGERANTE = {
+  201: ["Coca-Cola", "Coca-Cola Zero", "Fanta Laranja", "Fanta Uva", "Guaraná Antarctica"], // Lata
+  202: ["Coca-Cola", "Coca-Cola Zero"], // 600ml
+  203: ["Coca-Cola", "Fanta Laranja", "Guaraná Antarctica"], // 1 Litro
+  204: ["Coca-Cola"], // 1,5 Litro
+};
+
 const MENU = {
   pasteis: [
     { id: 1,  nome: "Carne",                              preco: 13.00 },

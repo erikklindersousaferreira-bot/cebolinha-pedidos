@@ -1,16 +1,23 @@
 // ===================================
 // ESTADO DO CARRINHO
 // ===================================
-// cart: para itens SEM adicionais (batatas, bebidas, sorvetes) -> { itemId: quantidade }
-// cartLines: para itens COM adicionais (pastéis) -> [{ lineId, itemId, addonIds: [], qty }]
+// cart: para itens SEM adicionais (batatas, sorvetes, água, sucos) -> { itemId: quantidade }
+// cartLines: para pastéis COM adicionais -> [{ lineId, itemId, addonIds: [], qty }]
+// cartDrinks: para refrigerantes COM sabor -> [{ lineId, itemId, sabor, qty }]
 let cart = {};
 let cartLines = [];
+let cartDrinks = [];
 let orderMode = "entrega"; // "entrega" | "retirada"
 let nextLineId = 1;
 
 // Categorias que usam o modal de adicionais
 const ADDON_CATEGORIES = ["pasteis"];
 const ADDON_PRICE = 3.00;
+
+// Itens de bebida que exigem escolha de sabor (refrigerantes com SABORES_REFRIGERANTE definido)
+function needsFlavor(itemId) {
+  return Object.prototype.hasOwnProperty.call(SABORES_REFRIGERANTE, itemId);
+}
 
 const allItems = [...MENU.pasteis, ...MENU.batatas, ...MENU.bebidas, ...MENU.sorvetes];
 
@@ -103,6 +110,23 @@ function renderItemAction(itemId) {
           <button class="qty-btn" onclick="removePastel(${itemId})">−</button>
           <span class="qty-val">${totalQty}</span>
           <button class="qty-btn" onclick="addPastel(${itemId})">+</button>
+        </div>
+      `;
+    }
+    return;
+  }
+
+  if (needsFlavor(itemId)) {
+    const totalQty = cartDrinks.filter((l) => l.itemId === itemId).reduce((s, l) => s + l.qty, 0);
+
+    if (totalQty === 0) {
+      actionSlot.innerHTML = `<button class="item-add-btn" onclick="openFlavorModal(${itemId})">Adicionar</button>`;
+    } else {
+      actionSlot.innerHTML = `
+        <div class="item-qty-control">
+          <button class="qty-btn" onclick="removeDrink(${itemId})">−</button>
+          <span class="qty-val">${totalQty}</span>
+          <button class="qty-btn" onclick="openFlavorModal(${itemId})">+</button>
         </div>
       `;
     }
@@ -356,6 +380,105 @@ function decrementLine(lineId) {
 }
 
 // ===================================
+// MODAL DE ESCOLHA DE SABOR (refrigerantes)
+// ===================================
+let currentFlavorItemId = null;
+
+function openFlavorModal(itemId) {
+  currentFlavorItemId = itemId;
+  const item = getItemById(itemId);
+  document.getElementById("flavorItemName").textContent = item.nome;
+
+  const sabores = SABORES_REFRIGERANTE[itemId] || [];
+  const listEl = document.getElementById("flavorList");
+  listEl.innerHTML = sabores
+    .map(
+      (sabor) => `
+      <div class="addon-option" onclick="confirmFlavor('${sabor.replace(/'/g, "\\'")}')">
+        <span class="addon-option-name">${sabor}</span>
+      </div>
+    `
+    )
+    .join("");
+
+  document.getElementById("flavorModal").classList.add("open");
+  document.getElementById("flavorOverlay").classList.add("visible");
+  document.body.classList.add("modal-open");
+}
+
+function closeFlavorModal() {
+  document.getElementById("flavorModal").classList.remove("open");
+  document.getElementById("flavorOverlay").classList.remove("visible");
+  document.body.classList.remove("modal-open");
+  currentFlavorItemId = null;
+}
+
+document.getElementById("closeFlavorBtn").addEventListener("click", closeFlavorModal);
+document.getElementById("flavorOverlay").addEventListener("click", closeFlavorModal);
+
+function confirmFlavor(sabor) {
+  const itemId = currentFlavorItemId;
+  let line = cartDrinks.find((l) => l.itemId === itemId && l.sabor === sabor);
+  if (line) {
+    line.qty += 1;
+  } else {
+    cartDrinks.push({ lineId: nextLineId++, itemId, sabor, qty: 1 });
+  }
+  closeFlavorModal();
+  renderItemAction(itemId);
+  updateCartUI();
+}
+
+function removeDrink(itemId) {
+  const lines = cartDrinks.filter((l) => l.itemId === itemId);
+  if (lines.length === 0) return;
+  const targetLine = lines[lines.length - 1];
+  targetLine.qty -= 1;
+  if (targetLine.qty <= 0) {
+    cartDrinks = cartDrinks.filter((l) => l.lineId !== targetLine.lineId);
+  }
+  renderItemAction(itemId);
+  updateCartUI();
+}
+
+function removeDrinkLine(lineId) {
+  cartDrinks = cartDrinks.filter((l) => l.lineId !== lineId);
+  updateCartUI();
+  const line = cartDrinks.find((l) => l.lineId === lineId);
+  // Atualiza o botão na tela de produtos para todos os itens de bebida (caso esteja visível)
+  Object.keys(SABORES_REFRIGERANTE).forEach((id) => renderItemAction(Number(id)));
+}
+
+function incrementDrinkLine(lineId) {
+  const line = cartDrinks.find((l) => l.lineId === lineId);
+  if (line) line.qty += 1;
+  updateCartUI();
+  if (line) renderItemAction(line.itemId);
+}
+
+function decrementDrinkLine(lineId) {
+  const line = cartDrinks.find((l) => l.lineId === lineId);
+  if (!line) return;
+  const itemId = line.itemId;
+  line.qty -= 1;
+  if (line.qty <= 0) {
+    cartDrinks = cartDrinks.filter((l) => l.lineId !== lineId);
+  }
+  updateCartUI();
+  renderItemAction(itemId);
+}
+
+function getDrinkLinePrice(line) {
+  const baseItem = getItemById(line.itemId);
+  return baseItem.preco * line.qty;
+}
+
+function getDrinkLineLabel(line) {
+  const baseItem = getItemById(line.itemId);
+  return `${baseItem.nome} - ${line.sabor}`;
+}
+
+// ===================================
 // AÇÕES DO CARRINHO
 // ===================================
 function addItem(itemId) {
@@ -382,7 +505,8 @@ function getCartEntries() {
 function getSubtotal() {
   const simpleTotal = getCartEntries().reduce((sum, e) => sum + e.item.preco * e.qty, 0);
   const linesTotal = cartLines.reduce((sum, line) => sum + getLinePrice(line), 0);
-  return simpleTotal + linesTotal;
+  const drinksTotal = cartDrinks.reduce((sum, line) => sum + getDrinkLinePrice(line), 0);
+  return simpleTotal + linesTotal + drinksTotal;
 }
 
 function getDeliveryFee() {
@@ -395,7 +519,8 @@ function getDeliveryFee() {
 function getTotalCount() {
   const simpleCount = Object.values(cart).reduce((a, b) => a + b, 0);
   const linesCount = cartLines.reduce((sum, line) => sum + line.qty, 0);
-  return simpleCount + linesCount;
+  const drinksCount = cartDrinks.reduce((sum, line) => sum + line.qty, 0);
+  return simpleCount + linesCount + drinksCount;
 }
 
 // ===================================
@@ -436,7 +561,7 @@ function updateCartUI() {
   const emptyMsg = document.getElementById("emptyCartMsg");
   const cartFooter = document.getElementById("cartFooter");
   const entries = getCartEntries();
-  const hasAnyItem = entries.length > 0 || cartLines.length > 0;
+  const hasAnyItem = entries.length > 0 || cartLines.length > 0 || cartDrinks.length > 0;
 
   if (!hasAnyItem) {
     emptyMsg.style.display = "block";
@@ -482,7 +607,25 @@ function updateCartUI() {
       )
       .join("");
 
-    cartItemsEl.innerHTML = linesHtml + simpleHtml;
+    const drinksHtml = cartDrinks
+      .map(
+        (line) => `
+        <div class="cart-item">
+          <div>
+            <div class="cart-item-name">${line.qty}x ${getDrinkLineLabel(line)}</div>
+            <div class="cart-item-price">R$ ${formatPrice(getDrinkLinePrice(line))}</div>
+          </div>
+          <div class="item-qty-control">
+            <button class="qty-btn" onclick="decrementDrinkLine(${line.lineId})">−</button>
+            <span class="qty-val">${line.qty}</span>
+            <button class="qty-btn" onclick="incrementDrinkLine(${line.lineId})">+</button>
+          </div>
+        </div>
+      `
+      )
+      .join("");
+
+    cartItemsEl.innerHTML = linesHtml + drinksHtml + simpleHtml;
   }
 
   // Resumo de valores
@@ -600,6 +743,12 @@ function buildWhatsappMessage() {
     const cat = categoryOf(e.item.id);
     if (!groupedLines[cat]) groupedLines[cat] = [];
     groupedLines[cat].push(`▫️ ${e.qty}x ${e.item.nome} — R$ ${formatPrice(e.item.preco * e.qty)}`);
+  });
+
+  cartDrinks.forEach((line) => {
+    const cat = categoryOf(line.itemId);
+    if (!groupedLines[cat]) groupedLines[cat] = [];
+    groupedLines[cat].push(`▫️ ${line.qty}x ${getDrinkLineLabel(line)} — R$ ${formatPrice(getDrinkLinePrice(line))}`);
   });
 
   Object.keys(CATEGORY_TITLES).forEach((catKey) => {

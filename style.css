@@ -496,6 +496,11 @@ body.modal-open {
   background: rgba(43, 36, 32, 0.72);
 }
 
+#flavorOverlay {
+  z-index: 120;
+  background: rgba(43, 36, 32, 0.72);
+}
+
 .addons-modal {
   position: fixed;
   left: 50%;
