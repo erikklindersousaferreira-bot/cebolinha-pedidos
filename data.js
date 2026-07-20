@@ -3,7 +3,7 @@
 // Edite aqui produtos, preços e bairros
 // ===================================
 
-const WHATSAPP_NUMBER = "5594991361499"; // número da loja, formato internacional sem espaços/símbolos
+const WHATSAPP_NUMBER = "5594991049450"; // número da loja, formato internacional sem espaços/símbolos
 
 const SABORES_REFRIGERANTE = {
   201: ["Coca-Cola", "Coca-Cola Zero", "Fanta Laranja", "Fanta Uva", "Guaraná Antarctica"], // Lata
