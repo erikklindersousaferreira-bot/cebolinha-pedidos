@@ -513,6 +513,21 @@ body.modal-open {
   background: rgba(43, 36, 32, 0.72);
 }
 
+#sizeOverlay {
+  z-index: 120;
+  background: rgba(43, 36, 32, 0.72);
+}
+
+/* Opção de tamanho — preço em destaque (sem checkbox) */
+.size-option {
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.size-option:hover {
+  background: #FFF1C2;
+}
+
 .addons-modal {
   position: fixed;
   left: 50%;

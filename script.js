@@ -1,12 +1,14 @@
 // ===================================
 // ESTADO DO CARRINHO
 // ===================================
-// cart: para itens SEM adicionais (batatas, sorvetes, água, sucos) -> { itemId: quantidade }
+// cart: para itens SEM adicionais (batatas, sorvetes simples, água, sucos) -> { itemId: quantidade }
 // cartLines: para pastéis COM adicionais -> [{ lineId, itemId, addonIds: [], qty }]
 // cartDrinks: para refrigerantes COM sabor -> [{ lineId, itemId, sabor, qty }]
+// cartSizes: para milk shakes COM tamanho -> [{ lineId, itemId, tamanho, preco, qty }]
 let cart = {};
 let cartLines = [];
 let cartDrinks = [];
+let cartSizes = [];
 let orderMode = "entrega"; // "entrega" | "retirada"
 let nextLineId = 1;
 
@@ -14,9 +16,14 @@ let nextLineId = 1;
 const ADDON_CATEGORIES = ["pasteis"];
 const ADDON_PRICE = 3.00;
 
-// Itens de bebida que exigem escolha de sabor (refrigerantes com SABORES_REFRIGERANTE definido)
+// Itens de bebida que exigem escolha de sabor (refrigerantes)
 function needsFlavor(itemId) {
   return Object.prototype.hasOwnProperty.call(SABORES_REFRIGERANTE, itemId);
+}
+
+// Itens que exigem escolha de tamanho (milk shakes)
+function needsSize(itemId) {
+  return Object.prototype.hasOwnProperty.call(TAMANHOS_MILKSHAKE, itemId);
 }
 
 const allItems = [...MENU.pasteis, ...MENU.batatas, ...MENU.bebidas, ...MENU.sorvetes];
@@ -127,6 +134,23 @@ function renderItemAction(itemId) {
           <button class="qty-btn" onclick="removeDrink(${itemId})">−</button>
           <span class="qty-val">${totalQty}</span>
           <button class="qty-btn" onclick="openFlavorModal(${itemId})">+</button>
+        </div>
+      `;
+    }
+    return;
+  }
+
+  if (needsSize(itemId)) {
+    const totalQty = cartSizes.filter((l) => l.itemId === itemId).reduce((s, l) => s + l.qty, 0);
+
+    if (totalQty === 0) {
+      actionSlot.innerHTML = `<button class="item-add-btn" onclick="openSizeModal(${itemId})">Adicionar</button>`;
+    } else {
+      actionSlot.innerHTML = `
+        <div class="item-qty-control">
+          <button class="qty-btn" onclick="removeMilkShake(${itemId})">−</button>
+          <span class="qty-val">${totalQty}</span>
+          <button class="qty-btn" onclick="openSizeModal(${itemId})">+</button>
         </div>
       `;
     }
@@ -479,6 +503,97 @@ function getDrinkLineLabel(line) {
 }
 
 // ===================================
+// MODAL DE TAMANHO (milk shakes)
+// ===================================
+let currentSizeItemId = null;
+
+function openSizeModal(itemId) {
+  currentSizeItemId = itemId;
+  const item = getItemById(itemId);
+  document.getElementById("sizeItemName").textContent = item.nome;
+
+  const tamanhos = TAMANHOS_MILKSHAKE[itemId] || [];
+  const listEl = document.getElementById("sizeList");
+  listEl.innerHTML = tamanhos
+    .map(
+      (t) => `
+      <div class="addon-option size-option" onclick="confirmSize('${t.label}', ${t.preco})">
+        <span class="addon-option-name">${t.label}</span>
+        <span class="addon-option-price">R$ ${formatPrice(t.preco)}</span>
+      </div>
+    `
+    )
+    .join("");
+
+  document.getElementById("sizeModal").classList.add("open");
+  document.getElementById("sizeOverlay").classList.add("visible");
+  document.body.classList.add("modal-open");
+}
+
+function closeSizeModal() {
+  document.getElementById("sizeModal").classList.remove("open");
+  document.getElementById("sizeOverlay").classList.remove("visible");
+  document.body.classList.remove("modal-open");
+  currentSizeItemId = null;
+}
+
+document.getElementById("closeSizeBtn").addEventListener("click", closeSizeModal);
+document.getElementById("sizeOverlay").addEventListener("click", closeSizeModal);
+
+function confirmSize(tamanho, preco) {
+  const itemId = currentSizeItemId;
+  let line = cartSizes.find((l) => l.itemId === itemId && l.tamanho === tamanho);
+  if (line) {
+    line.qty += 1;
+  } else {
+    cartSizes.push({ lineId: nextLineId++, itemId, tamanho, preco, qty: 1 });
+  }
+  closeSizeModal();
+  renderItemAction(itemId);
+  updateCartUI();
+}
+
+function removeMilkShake(itemId) {
+  const lines = cartSizes.filter((l) => l.itemId === itemId);
+  if (lines.length === 0) return;
+  const targetLine = lines[lines.length - 1];
+  targetLine.qty -= 1;
+  if (targetLine.qty <= 0) {
+    cartSizes = cartSizes.filter((l) => l.lineId !== targetLine.lineId);
+  }
+  renderItemAction(itemId);
+  updateCartUI();
+}
+
+function incrementSizeLine(lineId) {
+  const line = cartSizes.find((l) => l.lineId === lineId);
+  if (line) line.qty += 1;
+  updateCartUI();
+  if (line) renderItemAction(line.itemId);
+}
+
+function decrementSizeLine(lineId) {
+  const line = cartSizes.find((l) => l.lineId === lineId);
+  if (!line) return;
+  const itemId = line.itemId;
+  line.qty -= 1;
+  if (line.qty <= 0) {
+    cartSizes = cartSizes.filter((l) => l.lineId !== lineId);
+  }
+  updateCartUI();
+  renderItemAction(itemId);
+}
+
+function getSizeLinePrice(line) {
+  return line.preco * line.qty;
+}
+
+function getSizeLineLabel(line) {
+  const baseItem = getItemById(line.itemId);
+  return `${baseItem.nome} ${line.tamanho}`;
+}
+
+// ===================================
 // AÇÕES DO CARRINHO
 // ===================================
 function addItem(itemId) {
@@ -506,7 +621,8 @@ function getSubtotal() {
   const simpleTotal = getCartEntries().reduce((sum, e) => sum + e.item.preco * e.qty, 0);
   const linesTotal = cartLines.reduce((sum, line) => sum + getLinePrice(line), 0);
   const drinksTotal = cartDrinks.reduce((sum, line) => sum + getDrinkLinePrice(line), 0);
-  return simpleTotal + linesTotal + drinksTotal;
+  const sizesTotal = cartSizes.reduce((sum, line) => sum + getSizeLinePrice(line), 0);
+  return simpleTotal + linesTotal + drinksTotal + sizesTotal;
 }
 
 function getDeliveryFee() {
@@ -520,7 +636,8 @@ function getTotalCount() {
   const simpleCount = Object.values(cart).reduce((a, b) => a + b, 0);
   const linesCount = cartLines.reduce((sum, line) => sum + line.qty, 0);
   const drinksCount = cartDrinks.reduce((sum, line) => sum + line.qty, 0);
-  return simpleCount + linesCount + drinksCount;
+  const sizesCount = cartSizes.reduce((sum, line) => sum + line.qty, 0);
+  return simpleCount + linesCount + drinksCount + sizesCount;
 }
 
 // ===================================
@@ -625,7 +742,25 @@ function updateCartUI() {
       )
       .join("");
 
-    cartItemsEl.innerHTML = linesHtml + drinksHtml + simpleHtml;
+    const sizesHtml = cartSizes
+      .map(
+        (line) => `
+        <div class="cart-item">
+          <div>
+            <div class="cart-item-name">${line.qty}x ${getSizeLineLabel(line)}</div>
+            <div class="cart-item-price">R$ ${formatPrice(getSizeLinePrice(line))}</div>
+          </div>
+          <div class="item-qty-control">
+            <button class="qty-btn" onclick="decrementSizeLine(${line.lineId})">−</button>
+            <span class="qty-val">${line.qty}</span>
+            <button class="qty-btn" onclick="incrementSizeLine(${line.lineId})">+</button>
+          </div>
+        </div>
+      `
+      )
+      .join("");
+
+    cartItemsEl.innerHTML = linesHtml + sizesHtml + drinksHtml + simpleHtml;
   }
 
   // Resumo de valores
@@ -749,6 +884,12 @@ function buildWhatsappMessage() {
     const cat = categoryOf(line.itemId);
     if (!groupedLines[cat]) groupedLines[cat] = [];
     groupedLines[cat].push(`▫️ ${line.qty}x ${getDrinkLineLabel(line)} — R$ ${formatPrice(getDrinkLinePrice(line))}`);
+  });
+
+  cartSizes.forEach((line) => {
+    const cat = categoryOf(line.itemId);
+    if (!groupedLines[cat]) groupedLines[cat] = [];
+    groupedLines[cat].push(`▫️ ${line.qty}x ${getSizeLineLabel(line)} — R$ ${formatPrice(getSizeLinePrice(line))}`);
   });
 
   Object.keys(CATEGORY_TITLES).forEach((catKey) => {
