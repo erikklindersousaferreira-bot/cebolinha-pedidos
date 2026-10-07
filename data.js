@@ -98,7 +98,7 @@ const ADICIONAIS_PASTEL = [
 ];
 
 const PIX_INFO = {
-  nome: "Tamara Thais Lima de Araujo",
+  nome: "Rafael Aquino de Souza",
   banco: "Nubank",
   chave: "025.899.852-07",
 };
