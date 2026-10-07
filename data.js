@@ -14,26 +14,26 @@ const SABORES_REFRIGERANTE = {
 
 const MENU = {
   pasteis: [
-    { id: 1,  nome: "Carne",                              preco: 13.00 },
-    { id: 2,  nome: "Carne e Queijo",                      preco: 13.00 },
-    { id: 3,  nome: "Carne, Queijo e Catupiry",            preco: 13.00 },
-    { id: 4,  nome: "Carne, Queijo e Cheddar",              preco: 13.00 },
-    { id: 5,  nome: "Carne Seca",                          preco: 15.00 },
-    { id: 6,  nome: "Carne Seca e Queijo",                  preco: 15.00 },
-    { id: 7,  nome: "Carne Seca, Queijo e Catupiry",        preco: 15.00 },
-    { id: 8,  nome: "Carne Seca, Queijo e Cheddar",          preco: 15.00 },
-    { id: 9,  nome: "Queijo e Presunto",                    preco: 13.00 },
-    { id: 10, nome: "Queijo e Banana",                      preco: 13.00 },
-    { id: 11, nome: "Queijo e Calabresa",                    preco: 13.00 },
-    { id: 12, nome: "Queijo",                                preco: 13.00 },
-    { id: 13, nome: "Pizza",                                preco: 13.00 },
-    { id: 14, nome: "Frango",                                preco: 13.00 },
-    { id: 15, nome: "Frango e Queijo",                      preco: 13.00 },
-    { id: 16, nome: "Frango, Queijo e Catupiry",            preco: 13.00 },
-    { id: 17, nome: "Frango, Queijo e Cheddar",              preco: 13.00 },
+    { id: 1,  nome: "Carne",                              preco: 14.00 },
+    { id: 2,  nome: "Carne e Queijo",                      preco: 14.00 },
+    { id: 3,  nome: "Carne, Queijo e Catupiry",            preco: 14.00 },
+    { id: 4,  nome: "Carne, Queijo e Cheddar",              preco: 14.00 },
+    { id: 5,  nome: "Carne Seca",                          preco: 16.00 },
+    { id: 6,  nome: "Carne Seca e Queijo",                  preco: 16.00 },
+    { id: 7,  nome: "Carne Seca, Queijo e Catupiry",        preco: 16.00 },
+    { id: 8,  nome: "Carne Seca, Queijo e Cheddar",          preco: 16.00 },
+    { id: 9,  nome: "Queijo e Presunto",                    preco: 14.00 },
+    { id: 10, nome: "Queijo e Banana",                      preco: 14.00 },
+    { id: 11, nome: "Queijo e Calabresa",                    preco: 14.00 },
+    { id: 12, nome: "Queijo",                                preco: 14.00 },
+    { id: 13, nome: "Pizza",                                preco: 14.00 },
+    { id: 14, nome: "Frango",                                preco: 14.00 },
+    { id: 15, nome: "Frango e Queijo",                      preco: 14.00 },
+    { id: 16, nome: "Frango, Queijo e Catupiry",            preco: 14.00 },
+    { id: 17, nome: "Frango, Queijo e Cheddar",              preco: 14.00 },
     { id: 18, nome: "Camarão",                              preco: 18.00 },
     { id: 19, nome: "Camarão e Queijo",                      preco: 18.00 },
-    { id: 20, nome: "Romeu e Julieta",                      preco: 13.00 },
+    { id: 20, nome: "Romeu e Julieta",                      preco: 14.00 },
   ],
   batatas: [
     { id: 101, nome: "Batata, Queijo e Cheddar",                       preco: 15.00 },
@@ -100,7 +100,7 @@ const ADICIONAIS_PASTEL = [
 const PIX_INFO = {
   nome: "Tamara Thais Lima de Araujo",
   banco: "Nubank",
-  chave: "(94) 99294-8035",
+  chave: "025.899.852-07",
 };
 
 const BAIRROS = [
